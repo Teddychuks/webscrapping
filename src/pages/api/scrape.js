@@ -13,7 +13,8 @@ export default async function handler(req, res) {
     try {
       const { data } = await axios.get(url);
       const $ = cheerio.load(data);
-      const title = $(".mw-page-title-main").text();
+      // Use the generic selector for the <title> tag
+      const title = $("title").text();
 
       res.status(200).json({ title });
     } catch (error) {
