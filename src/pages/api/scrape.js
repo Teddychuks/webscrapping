@@ -1,4 +1,3 @@
-// Import axios to make HTTP requests
 const axios = require("axios");
 const cheerio = require("cheerio");
 
