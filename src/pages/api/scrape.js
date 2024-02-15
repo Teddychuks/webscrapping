@@ -10,20 +10,36 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { data } = await axios.get(url);
-      const $ = cheerio.load(data);
+      const response = await axios.get(url, {
+        validateStatus: function (status) {
+          return (status >= 200 && status < 300) || status === 404;
+        },
+      });
+
+      const $ = cheerio.load(response.data);
       const title = $("title").text();
 
-      res.status(200).json({ title });
+      if (title) {
+        return res.status(200).json({ title });
+      } else {
+        return res.status(404).json({ message: "Title not found" });
+      }
     } catch (error) {
       console.error("Error scraping the URL:", error);
 
-      if (axios.isAxiosError(error)) {
-        if (error.response && error.response.status === 404) {
-          return res.status(404).json({ message: "URL not found: 404 Error" });
+      if (axios.isAxiosError(error) && error.response) {
+        const $ = cheerio.load(error.response.data);
+        const title = $("title").text();
+        if (title) {
+          return res.status(error.response.status).json({ title });
+        } else {
+          return res.status(error.response.status).json({
+            message: "Failed to retrieve the title",
+            details: error.response.statusText,
+          });
         }
       } else {
-        res.status(500).json({
+        return res.status(500).json({
           message: "An unexpected error occurred",
           details: error.message,
         });
