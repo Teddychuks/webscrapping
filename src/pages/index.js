@@ -11,20 +11,28 @@ export default function Home() {
     e.preventDefault();
     setIsLoading(true);
     const encodedUrl = encodeURIComponent(url);
-    const response = await fetch(`/api/scrape?url=${encodedUrl}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    console.log(data);
-    if (data.title) {
-      setTitle(data.title);
-      setUrl("");
-      setIsLoading(false);
-    } else {
-      alert("Failed to fetch the title");
+    try {
+      const response = await fetch(`/api/scrape?url=${encodedUrl}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch the title");
+      }
+
+      if (data.title) {
+        setTitle(data.title);
+      } else {
+        throw new Error("The title could not be retrieved.");
+      }
+    } catch (error) {
+      alert(error.message);
+    } finally {
       setUrl("");
       setIsLoading(false);
     }
